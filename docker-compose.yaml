@@ -1,0 +1,73 @@
+version: "3.4"
+services:
+    database-postgres:
+        image: postgres:14.1-alpine
+        container_name: database-postgres
+        restart: always
+        environment:
+            PGDATA: /var/lib/postgresql/data/pgdata
+            POSTGRES_DB: api-app
+            POSTGRES_USER: api-app-user
+            POSTGRES_PASSWORD: password
+        volumes:
+            - ./docker/postgres:/var/lib/postgresql/data:rw
+        ports:
+            - '5430:5432'
+        networks:
+            - mock
+    php:
+        container_name: php
+        restart: 'no'
+        environment:
+            DATABASE_DRIVER: pdo_pgsql
+            DATABASE_HOST: database-postgres
+            DATABASE_PORT: 5432
+            DATABASE_NAME: api-app
+            DATABASE_USER: api-app-user
+            DATABASE_PASSWORD: password
+            DATABASE_CHARSET: utf8
+            DATABASE_SERVER_VERSION: 14
+        build:
+            context: .
+            dockerfile: ./docker/php/Dockerfile
+            args:
+                SOURCE_PATH: /srv/www/api
+        networks:
+            - mock
+        volumes:
+            - ./projects/api:/srv/www/api:rw,delegated
+        depends_on:
+            - database-postgres
+
+    nginx:
+        container_name: nginx
+        image: nginx:stable-alpine
+        ports:
+            - '8001:80'
+        volumes:
+            - ./projects/api:/srv/www/api:ro
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - php
+            - database-postgres
+        networks:
+            - mock
+
+    ui:
+        container_name: ui
+        build:
+            context: .
+            dockerfile: ./docker/ui/Dockerfile
+        volumes:
+            - ./projects/ui/src:/app/src
+        ports:
+            - 3000:3000
+        environment:
+            REACT_APP_API_URL: http://localhost:8001
+        networks:
+            - mock
+        depends_on:
+            - nginx
+
+networks:
+    mock:
