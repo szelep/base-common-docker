@@ -3,8 +3,8 @@
 Simple docker-compose configuration to run API&UI containers simultaneously.
 
 ## Setup
-1) clone `base-api-app` into `./projects/api`*
-2) clone `base-react-app` into `./projects/ui`*
+1) clone `base-api-app` into `./projects/api`
+2) clone `base-react-app` into `./projects/ui`
 3) run `sudo docker-compose build`
 4) run `sudo docker-compose up`
 5) **Open in browser [localhost:3000](http://localhost:3000)**
